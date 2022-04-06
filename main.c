@@ -1,5 +1,5 @@
 #include "main.h"
-
+// o que ẽ big end vs outro end
 // OPERAÇÕES:
 // • cadastrar um novo filme, determinando um identificador numérico no cadastro;
 // • acrescentar um novo gênero em um filme;
