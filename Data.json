@@ -1,0 +1,22 @@
+{
+    "movies": [
+        {
+            "title": "O Resgate do Soldado Brian",
+            "gender": [0,1],
+            "director": "Steven Spielburg",
+            "year": 1999
+        },
+        {
+            "title": "Djanko Livre",
+            "gender": [2,3],
+            "director": "Quentin Tarantoni",
+            "year": 2013
+        }
+    ],
+    "gender": [
+        "Drama",
+        "Guerra",
+        "Ação",
+        "Faroeste"
+    ]
+}
