@@ -19,6 +19,15 @@
 
 #define BACKLOG 10   // how many pending connections queue will hold
 
+
+typedef struct {
+    char *gender;
+} data;
+
+data* newData();
+
+data *Data;
+
 void sigchld_handler(int s)
 {
     // waitpid() might overwrite errno, so we save and restore it:
@@ -38,6 +47,12 @@ void *get_in_addr(struct sockaddr *sa)
     }
 
     return &(((struct sockaddr_in6*)sa)->sin6_addr);
+}
+
+
+void getMovies(int new_fd) {
+    if (send(new_fd, Data->gender, 13, 0) == -1)
+        perror("send");
 }
 
 int main(void)
@@ -106,6 +121,8 @@ int main(void)
 
     printf("server: waiting for connections...\n");
 
+    Data = newData();
+
     while(1) {  // main accept() loop
         sin_size = sizeof their_addr;
         new_fd = accept(sockfd, (struct sockaddr *)&their_addr, &sin_size);
@@ -121,8 +138,7 @@ int main(void)
 
         if (!fork()) { // this is the child process
             close(sockfd); // child doesn't need the listener
-            if (send(new_fd, "Hello, world!", 13, 0) == -1)
-                perror("send");
+            getMovies(new_fd);
             close(new_fd);
             exit(0);
         }
@@ -130,4 +146,10 @@ int main(void)
     }
 
     return 0;
+}
+
+data* newData() {
+    data *aData = (data*) malloc(sizeof(data));
+    aData->gender = "a title";
+    return aData;
 }
