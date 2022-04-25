@@ -18,6 +18,7 @@
 #define PORT "3490"  // the port users will be connecting to
 
 #define BACKLOG 10   // how many pending connections queue will hold
+#define MAXDATASIZE 100 // max number of bytes we can get at once 
 
 
 typedef struct {
@@ -49,10 +50,49 @@ void *get_in_addr(struct sockaddr *sa)
     return &(((struct sockaddr_in6*)sa)->sin6_addr);
 }
 
-
 void getMovies(int new_fd) {
-    if (send(new_fd, Data->gender, 13, 0) == -1)
+    if (send(new_fd, "getMovies", 10, 0) == -1)
         perror("send");
+}
+void getMovies2(int new_fd) {
+    if (send(new_fd, "getMovies2", 10, 0) == -1)
+        perror("send");
+}
+void getMovies3(int new_fd) {
+    if (send(new_fd, "getMovies3", 10, 0) == -1)
+        perror("send");
+}
+
+void handleConnection(int new_fd) {
+    int numbytes;
+    char buf[MAXDATASIZE];
+
+    if ((numbytes = recv(new_fd, buf, MAXDATASIZE-1, 0)) == -1) {
+        perror("recv");
+        exit(1);
+    }
+    if (numbytes == 0) {
+        printf("server: a conexao foi fechada antes de vc receber algo\n");
+        exit(1);
+    }
+
+    buf[numbytes] = '\0';
+    printf("server: received '%s'\n",buf);
+
+    switch (buf[0]) {
+        case '1':
+            getMovies(new_fd);
+            break;
+        case '2':
+            getMovies2(new_fd);
+            break;
+        default:
+            getMovies3(new_fd);
+            return;
+            break;
+    }   
+
+    handleConnection(new_fd);
 }
 
 int main(void)
@@ -138,7 +178,9 @@ int main(void)
 
         if (!fork()) { // this is the child process
             close(sockfd); // child doesn't need the listener
-            getMovies(new_fd);
+
+            handleConnection(new_fd);
+
             close(new_fd);
             exit(0);
         }
@@ -150,6 +192,7 @@ int main(void)
 
 data* newData() {
     data *aData = (data*) malloc(sizeof(data));
+
     aData->gender = "a title";
     return aData;
 }

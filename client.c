@@ -28,10 +28,81 @@ void *get_in_addr(struct sockaddr *sa)
     return &(((struct sockaddr_in6*)sa)->sin6_addr);
 }
 
+
+int menu(int sockfd) {
+    char buf[MAXDATASIZE];
+    int numbytes;
+    printf("------------------------------------------------------------ \n");
+    printf("Escolha uma das ações para realizar: \n");
+    printf("    1 - Cadastrar um novo filme, determinando um identificador numérico no cadastro \n");
+    printf("    2 - Acrescentar um novo gênero em um filme \n");
+    printf("    3 - Listar todos os títulos, junto a seus respectivos identificadores \n");
+    printf("    4 - Listar informações (título, diretor(a) e ano) de todos os filmes de um determinado gênero \n");
+    printf("    5 - Listar todas as informações de todos os filmes \n");
+    printf("    6 - Listar todas as informações de um filme a partir de seu identificador \n");
+    printf("    7 - Remover um filme a partir de seu identificador \n");
+    printf("    Qualquer Outra Tecla - Sair do programa \n");
+    printf("------------------------------------------------------------ \n \n");
+
+    int option;
+    scanf("%i", &option);
+
+    switch (option)
+    {
+    case 1:
+        printf(" TO DO: CADASTRAR FILME ");
+        break;
+    case 2:
+        printf(" TO DO: ACRESCENTAR GENERO EM FILME ");
+        break;
+    case 3:
+        printf(" TO DO: LISTAR TITULOS E IDS ");
+        break;
+    case 4:
+        printf(" TO DO: LISTAR INFOS DE FILMES DE UM GENERO ");
+        break;
+    case 5:
+        printf(" TO DO: LISTAR TUDO ");
+        break;
+    case 6:
+        printf(" TO DO: LISTAR INFOS FILME DE UM ID ");
+        break;
+    case 7:
+        printf(" TO DO: REMOVER FILME A PARTIR DE ID ");
+        break;
+    
+    default:
+        return 0;
+    }
+
+    printf("\n\n");
+    char msg[2];
+    sprintf(msg, "%d", option);
+    if (send(sockfd, msg, 10, 0) == -1)
+        perror("send");
+
+    if ((numbytes = recv(sockfd, buf, MAXDATASIZE-1, 0)) == -1) {
+        perror("recv");
+        exit(1);
+    }
+
+    if (numbytes == 0) {
+        printf("client: a conexao foi fechada antes de vc receber algo");
+        exit(1);
+    }
+
+    buf[numbytes] = '\0';
+
+    printf("client: received '%s'\n",buf);
+
+    // system("PAUSE");
+    menu(sockfd);
+    return 0;
+}
+
 int main(int argc, char *argv[])
 {
-    int sockfd, numbytes;  
-    char buf[MAXDATASIZE];
+    int sockfd;  
     struct addrinfo hints, *servinfo, *p;
     int rv;
     char s[INET6_ADDRSTRLEN];
@@ -77,15 +148,8 @@ int main(int argc, char *argv[])
     printf("client: connecting to %s\n", s);
 
     freeaddrinfo(servinfo); // all done with this structure
-
-    if ((numbytes = recv(sockfd, buf, MAXDATASIZE-1, 0)) == -1) {
-        perror("recv");
-        exit(1);
-    }
-
-    buf[numbytes] = '\0';
-
-    printf("client: received '%s'\n",buf);
+    
+    menu(sockfd);
 
     close(sockfd);
 

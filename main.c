@@ -69,6 +69,7 @@ int menu() {
 
     system("PAUSE");
     menu();
+    return 0;
 }
 
 int main(void) {
