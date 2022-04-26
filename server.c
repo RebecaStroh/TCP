@@ -14,18 +14,12 @@
 #include <arpa/inet.h>
 #include <sys/wait.h>
 #include <signal.h>
+#include "data.h"
 
 #define PORT "3490"  // the port users will be connecting to
 
 #define BACKLOG 10   // how many pending connections queue will hold
 #define MAXDATASIZE 100 // max number of bytes we can get at once 
-
-
-typedef struct {
-    char *gender;
-} data;
-
-data* newData();
 
 data *Data;
 
@@ -39,7 +33,6 @@ void sigchld_handler(int s)
     errno = saved_errno;
 }
 
-
 // get sockaddr, IPv4 or IPv6:
 void *get_in_addr(struct sockaddr *sa)
 {
@@ -50,21 +43,64 @@ void *get_in_addr(struct sockaddr *sa)
     return &(((struct sockaddr_in6*)sa)->sin6_addr);
 }
 
-void getMovies(int new_fd) {
-    if (send(new_fd, "getMovies", 10, 0) == -1)
+int newMovie(int new_fd) { // OPTION 1
+    char *title = "Novo filme";
+    int gender[] = {1, 2};
+    char *director = "Carlos Alberto";
+    int year = 1999;
+
+    if (send(new_fd, "newMovie: { title: , gender: , director: , year: }", 30, 0) == -1)
         perror("send");
-}
-void getMovies2(int new_fd) {
-    if (send(new_fd, "getMovies2", 10, 0) == -1)
-        perror("send");
-}
-void getMovies3(int new_fd) {
-    if (send(new_fd, "getMovies3", 10, 0) == -1)
-        perror("send");
+    return 1;
 }
 
-void handleConnection(int new_fd) {
-    int numbytes;
+int newGenderInMovie(int new_fd) { // OPTION 2
+    int gender[] = {1};
+    int movie = 1;
+
+    if (send(new_fd, "newGenderInMovie: {gender: , movie: }", 30, 0) == -1)
+        perror("send");
+    return 1;
+}
+
+int getMoviesTitleId(int new_fd) { // OPTION 3
+    if (send(new_fd, "getMoviesTitleId", 30, 0) == -1)
+        perror("send");
+    return 1;
+}
+
+int getMoviesFromGender(int new_fd) {  // OPTION 4
+    int gender = 1;
+
+    if (send(new_fd, "getMoviesFromGender : { gender: }", 30, 0) == -1)
+        perror("send");
+    return 1;
+}
+
+int getAllMovies(int new_fd) { // OPTION 5
+    if (send(new_fd, "getAllMovies", 30, 0) == -1)
+        perror("send");
+    return 1;
+}
+
+int getMovie(int new_fd) { // OPTION 6
+    int id = 1;
+
+    if (send(new_fd, "getMovie: { id: }", 30, 0) == -1)
+        perror("send");
+    return 1;
+}
+
+int removeMovie(int new_fd) { // OPTION 7
+    int id = 1;
+
+    if (send(new_fd, "removeMovie: { id: }", 30, 0) == -1)
+        perror("send");
+    return 1;
+}
+
+void handleOptions(int new_fd) {
+    int numbytes, result;
     char buf[MAXDATASIZE];
 
     if ((numbytes = recv(new_fd, buf, MAXDATASIZE-1, 0)) == -1) {
@@ -77,22 +113,35 @@ void handleConnection(int new_fd) {
     }
 
     buf[numbytes] = '\0';
-    printf("server: received '%s'\n",buf);
+    printf("servidor: escolha recebida '%s'\n",buf);
 
     switch (buf[0]) {
         case '1':
-            getMovies(new_fd);
+            result = newMovie(new_fd);
             break;
         case '2':
-            getMovies2(new_fd);
+            result = newGenderInMovie(new_fd);
             break;
-        default:
-            getMovies3(new_fd);
+        case '3':
+            result = getMoviesTitleId(new_fd);
+            break;
+        case '4':
+            result = getMoviesFromGender(new_fd);
+            break;
+        case '5':
+            result = getAllMovies(new_fd);
+            break;
+        case '6':
+            result = getMovie(new_fd);
+            break;
+        case '7':
+            result = removeMovie(new_fd);
+            break;
+        default: // other parameter
             return;
-            break;
     }   
 
-    handleConnection(new_fd);
+    handleOptions(new_fd);
 }
 
 int main(void)
@@ -159,9 +208,9 @@ int main(void)
         exit(1);
     }
 
-    printf("server: waiting for connections...\n");
-
     Data = newData();
+
+    printf("server: waiting for connections...\n");
 
     while(1) {  // main accept() loop
         sin_size = sizeof their_addr;
@@ -178,9 +227,10 @@ int main(void)
 
         if (!fork()) { // this is the child process
             close(sockfd); // child doesn't need the listener
+            printf("data %s\n", Data->gender);
+            handleOptions(new_fd);
 
-            handleConnection(new_fd);
-
+            printf("servidor: tchauuuu\n");
             close(new_fd);
             exit(0);
         }
@@ -188,11 +238,4 @@ int main(void)
     }
 
     return 0;
-}
-
-data* newData() {
-    data *aData = (data*) malloc(sizeof(data));
-
-    aData->gender = "a title";
-    return aData;
 }

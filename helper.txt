@@ -1,0 +1,10 @@
+gcc -Wall -c server.c
+gcc -Wall -c data.c
+
+gcc -o myprog server.o data.o
+
+
+orrrrr
+
+
+gcc -Wall server.c data.c

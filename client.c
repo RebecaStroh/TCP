@@ -72,7 +72,7 @@ int menu(int sockfd) {
         break;
     
     default:
-        return 0;
+        break;
     }
 
     printf("\n\n");
@@ -80,6 +80,9 @@ int menu(int sockfd) {
     sprintf(msg, "%d", option);
     if (send(sockfd, msg, 10, 0) == -1)
         perror("send");
+
+    if (!(0<option && option<8))
+        return 0;
 
     if ((numbytes = recv(sockfd, buf, MAXDATASIZE-1, 0)) == -1) {
         perror("recv");
@@ -96,6 +99,7 @@ int menu(int sockfd) {
     printf("client: received '%s'\n",buf);
 
     // system("PAUSE");
+    system("read -p 'Press Enter to continue...' var");
     menu(sockfd);
     return 0;
 }
