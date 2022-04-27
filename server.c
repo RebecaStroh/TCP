@@ -14,14 +14,14 @@
 #include <arpa/inet.h>
 #include <sys/wait.h>
 #include <signal.h>
-#include "data.h"
+// #include "data.h"
 
 #define PORT "3490"  // the port users will be connecting to
 
 #define BACKLOG 10   // how many pending connections queue will hold
-#define MAXDATASIZE 100 // max number of bytes we can get at once 
+#define MAXDATASIZE 120 // max number of bytes we can get at once 
 
-data *Data;
+// data *Data;
 
 void sigchld_handler(int s)
 {
@@ -208,7 +208,7 @@ int main(void)
         exit(1);
     }
 
-    Data = newData();
+    // Data = newData();
 
     printf("server: waiting for connections...\n");
 
@@ -227,7 +227,7 @@ int main(void)
 
         if (!fork()) { // this is the child process
             close(sockfd); // child doesn't need the listener
-            printf("data %s\n", Data->gender);
+
             handleOptions(new_fd);
 
             printf("servidor: tchauuuu\n");

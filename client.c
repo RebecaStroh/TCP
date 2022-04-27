@@ -16,7 +16,7 @@
 
 #define PORT "3490" // the port client will be connecting to 
 
-#define MAXDATASIZE 100 // max number of bytes we can get at once 
+#define MAXDATASIZE 120 // max number of bytes we can get at once 
 
 // get sockaddr, IPv4 or IPv6:
 void *get_in_addr(struct sockaddr *sa)
@@ -28,6 +28,89 @@ void *get_in_addr(struct sockaddr *sa)
     return &(((struct sockaddr_in6*)sa)->sin6_addr);
 }
 
+int newMovie(int sockfd) { // OPTION 1
+    char title[30];
+    char gender[50];
+    char director[30];
+    char year[5];
+
+    // add option to msg
+    char msg[116] = "1|";
+    // add title to msg
+    printf("Escreva um título: ");
+    fflush (stdin);
+    fgets(title, 30, stdin);
+    title[strcspn(title, "\n")] = 0;
+    strcat(msg, title);
+    strcat(msg,"|");
+    // add director to msg
+    printf("Escreva o nome do diretor: ");
+    fflush (stdin);
+    fgets(director, 30, stdin);
+    director[strcspn(director, "\n")] = 0;
+    strcat(msg, director);
+    strcat(msg,"|");
+    // add year to msg
+    printf("Escreva um ano: ");
+    scanf("%s", year);
+    strcat(msg, year);
+    strcat(msg,"|");
+    // add gender to msg
+    printf("Escreva os generos: ");
+    fflush (stdin);
+    fgets(gender, 30, stdin);
+    gender[strcspn(gender, "\n")] = 0;
+    strcat(msg, gender);
+
+    printf("\ncliente vai enviar a seguinte mensagem: %s\n", msg);
+
+    if (send(sockfd, msg, 115, 0) == -1)
+        perror("send");
+    return 1;
+}
+
+int newGenderInMovie(int sockfd) { // OPTION 2
+
+    if (send(sockfd, "newGenderInMovie: {gender: , movie: }", 30, 0) == -1)
+        perror("send");
+    return 1;
+}
+
+int getMoviesTitleId(int sockfd) { // OPTION 3
+    if (send(sockfd, "getMoviesTitleId", 30, 0) == -1)
+        perror("send");
+    return 1;
+}
+
+int getMoviesFromGender(int sockfd) {  // OPTION 4
+    int gender = 1;
+
+    if (send(sockfd, "getMoviesFromGender : { gender: }", 30, 0) == -1)
+        perror("send");
+    return 1;
+}
+
+int getAllMovies(int sockfd) { // OPTION 5
+    if (send(sockfd, "getAllMovies", 30, 0) == -1)
+        perror("send");
+    return 1;
+}
+
+int getMovie(int sockfd) { // OPTION 6
+    int id = 1;
+
+    if (send(sockfd, "getMovie: { id: }", 30, 0) == -1)
+        perror("send");
+    return 1;
+}
+
+int removeMovie(int sockfd) { // OPTION 7
+    int id = 1;
+
+    if (send(sockfd, "removeMovie: { id: }", 30, 0) == -1)
+        perror("send");
+    return 1;
+}
 
 int menu(int sockfd) {
     char buf[MAXDATASIZE];
@@ -44,31 +127,35 @@ int menu(int sockfd) {
     printf("    Qualquer Outra Tecla - Sair do programa \n");
     printf("------------------------------------------------------------ \n \n");
 
+    fflush (stdin);
     int option;
-    scanf("%i", &option);
+    int success = scanf("%i", &option);
+
+    if (!(0<option && option<8 && success))
+        return 0;
 
     switch (option)
     {
     case 1:
-        printf(" TO DO: CADASTRAR FILME ");
+        newMovie(sockfd);
         break;
     case 2:
-        printf(" TO DO: ACRESCENTAR GENERO EM FILME ");
+        newGenderInMovie(sockfd);
         break;
     case 3:
-        printf(" TO DO: LISTAR TITULOS E IDS ");
+        getMoviesTitleId(sockfd);
         break;
     case 4:
-        printf(" TO DO: LISTAR INFOS DE FILMES DE UM GENERO ");
+        getMoviesFromGender(sockfd);
         break;
     case 5:
-        printf(" TO DO: LISTAR TUDO ");
+        getAllMovies(sockfd);
         break;
     case 6:
-        printf(" TO DO: LISTAR INFOS FILME DE UM ID ");
+        getMovie(sockfd);
         break;
     case 7:
-        printf(" TO DO: REMOVER FILME A PARTIR DE ID ");
+        removeMovie(sockfd);
         break;
     
     default:
@@ -76,13 +163,6 @@ int menu(int sockfd) {
     }
 
     printf("\n\n");
-    char msg[2];
-    sprintf(msg, "%d", option);
-    if (send(sockfd, msg, 10, 0) == -1)
-        perror("send");
-
-    if (!(0<option && option<8))
-        return 0;
 
     if ((numbytes = recv(sockfd, buf, MAXDATASIZE-1, 0)) == -1) {
         perror("recv");
