@@ -3,3 +3,4 @@ main.dSYM
 client.dSYM
 *.out
 .vscode/settings.json
+.vscode

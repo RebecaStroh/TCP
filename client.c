@@ -33,6 +33,7 @@ int newMovie(int sockfd) { // OPTION 1
     char gender[50];
     char director[30];
     char year[5];
+    char c;
 
     // add option to msg
     char msg[116] = "1|";
@@ -52,13 +53,16 @@ int newMovie(int sockfd) { // OPTION 1
     strcat(msg,"|");
     // add year to msg
     printf("Escreva um ano: ");
-    scanf("%s", year);
+    fflush (stdin);
+    fgets(year, 5, stdin);
+    year[strcspn(year, "\n")] = 0;
     strcat(msg, year);
     strcat(msg,"|");
     // add gender to msg
+    do {c = getchar();} while (c != EOF && c != '\n');
     printf("Escreva os generos: ");
     fflush (stdin);
-    fgets(gender, 30, stdin);
+    fgets(gender, 50, stdin);
     gender[strcspn(gender, "\n")] = 0;
     strcat(msg, gender);
 
@@ -70,44 +74,98 @@ int newMovie(int sockfd) { // OPTION 1
 }
 
 int newGenderInMovie(int sockfd) { // OPTION 2
+    char gender[20];
+    char id[5];
+    char c;
 
-    if (send(sockfd, "newGenderInMovie: {gender: , movie: }", 30, 0) == -1)
+    // add option to msg
+    char msg[30] = "2|";
+    // add id to msg
+    printf("Escreva o id do filme: ");
+    fflush (stdin);
+    fgets(id, 5, stdin);
+    id[strcspn(id, "\n")] = 0;
+    strcat(msg, id);
+    strcat(msg,"|");
+    // add gender to msg
+    printf("Escreva o genero desejado: ");
+    fflush (stdin);
+    fgets(gender, 20, stdin);
+    gender[strcspn(gender, "\n")] = 0;
+    strcat(msg, gender);
+
+    printf("\ncliente vai enviar a seguinte mensagem: %s\n", msg);
+
+    if (send(sockfd, msg, 29, 0) == -1)
         perror("send");
     return 1;
 }
 
 int getMoviesTitleId(int sockfd) { // OPTION 3
-    if (send(sockfd, "getMoviesTitleId", 30, 0) == -1)
+    if (send(sockfd, "3", 29, 0) == -1)
         perror("send");
     return 1;
 }
 
 int getMoviesFromGender(int sockfd) {  // OPTION 4
-    int gender = 1;
+    char gender[20];
 
-    if (send(sockfd, "getMoviesFromGender : { gender: }", 30, 0) == -1)
+    // add option to msg
+    char msg[30] = "4|";
+    // add gender to msg
+    printf("Escreva o genero desejado: ");
+    fflush (stdin);
+    fgets(gender, 20, stdin);
+    gender[strcspn(gender, "\n")] = 0;
+    strcat(msg, gender);
+
+    printf("\ncliente vai enviar a seguinte mensagem: %s\n", msg);
+
+    if (send(sockfd, msg, 29, 0) == -1)
         perror("send");
     return 1;
 }
 
 int getAllMovies(int sockfd) { // OPTION 5
-    if (send(sockfd, "getAllMovies", 30, 0) == -1)
+    if (send(sockfd, "5", 2, 0) == -1)
         perror("send");
     return 1;
 }
 
 int getMovie(int sockfd) { // OPTION 6
-    int id = 1;
+    char id[5];
 
-    if (send(sockfd, "getMovie: { id: }", 30, 0) == -1)
+    // add option to msg
+    char msg[10] = "6|";
+    // add id to msg
+    printf("Escreva o id do filme: ");
+    fflush (stdin);
+    fgets(id, 5, stdin);
+    id[strcspn(id, "\n")] = 0;
+    strcat(msg, id);
+
+    printf("\ncliente vai enviar a seguinte mensagem: %s\n", msg);
+
+    if (send(sockfd, msg, 9, 0) == -1)
         perror("send");
     return 1;
 }
 
 int removeMovie(int sockfd) { // OPTION 7
-    int id = 1;
+    char id[5];
 
-    if (send(sockfd, "removeMovie: { id: }", 30, 0) == -1)
+    // add option to msg
+    char msg[10] = "7|";
+    // add id to msg
+    printf("Escreva o id do filme: ");
+    fflush (stdin);
+    fgets(id, 5, stdin);
+    id[strcspn(id, "\n")] = 0;
+    strcat(msg, id);
+
+    printf("\ncliente vai enviar a seguinte mensagem: %s\n", msg);
+
+    if (send(sockfd, msg, 9, 0) == -1)
         perror("send");
     return 1;
 }
@@ -128,33 +186,37 @@ int menu(int sockfd) {
     printf("------------------------------------------------------------ \n \n");
 
     fflush (stdin);
-    int option;
-    int success = scanf("%i", &option);
+    char option, c;
+    int success = scanf("%c", &option);
+    do {c = getchar();} while (c != EOF && c != '\n');
 
-    if (!(0<option && option<8 && success))
+    if ((option != '1' && option != '2' && option != '3' && option != '4' && option != '5' && option != '6' && option != '7') || !success){
+        if (send(sockfd, "q", 2, 0) == -1)
+            perror("send");
         return 0;
+    }
 
     switch (option)
     {
-    case 1:
+    case '1':
         newMovie(sockfd);
         break;
-    case 2:
+    case '2':
         newGenderInMovie(sockfd);
         break;
-    case 3:
+    case '3':
         getMoviesTitleId(sockfd);
         break;
-    case 4:
+    case '4':
         getMoviesFromGender(sockfd);
         break;
-    case 5:
+    case '5':
         getAllMovies(sockfd);
         break;
-    case 6:
+    case '6':
         getMovie(sockfd);
         break;
-    case 7:
+    case '7':
         removeMovie(sockfd);
         break;
     
@@ -180,8 +242,7 @@ int menu(int sockfd) {
 
     // system("PAUSE");
     system("read -p 'Press Enter to continue...' var");
-    menu(sockfd);
-    return 0;
+    return menu(sockfd);
 }
 
 int main(int argc, char *argv[])
