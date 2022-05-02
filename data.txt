@@ -1,3 +1,9 @@
+7
 id|title|director|year|genders
-0|O Resgate do Soldado Brian|Steven Spielburg|1999|Drama,Guerra
-1|Djanko Livre|Quentin Tarantoni|2013|Ação,Faroeste
+0|O Resgate do Soldado Brian|Steven Spielburg|1999|drama,guerra
+1|Djanko Livre|Quentin Tarantoni|2013|ação,faroeste,amor
+2|bom dia lindo|sou muito bela|1999|drama,suspense
+5|divertidamente|nao sei o nome|2012|animação,drama
+6|branca de neve e os sete anoe|disney|1808|conto de fadas,drama
+8|e|r|t|y,x
+9|sou um titulo de vdd|diretor de vdd|1999|cu,cachorro
