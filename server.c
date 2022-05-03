@@ -45,11 +45,13 @@ void garanteeNumberAndHeaderLinesOnFile() {
     char buf[MAXDATASIZE];
     int count = 1;
 
-    file = fopen(FILENAME, "r"); // Abre o arquivo como leitura
-    while ((fgets(buf, MAXDATASIZE, file)) != NULL) { // Le cada linha do arquivo
-        count++;
+    if( access( FILENAME, F_OK ) == 0 ) { // Se o arquivo existir, pesquisa se tem as primeiras linhas
+        file = fopen(FILENAME, "r"); // Abre o arquivo como leitura
+        while ((fgets(buf, MAXDATASIZE, file)) != NULL) { // Le cada linha do arquivo
+            count++;
+        }
+        fclose(file); // fecha arquivo
     }
-    fclose(file); // fecha arquivo
 
     if ((count == 1) || (count == 2)) {
         file = fopen(FILENAME, "w"); // Abre o arquivo como escrita
@@ -57,8 +59,6 @@ void garanteeNumberAndHeaderLinesOnFile() {
         fputs("\nid|title|director|year|genders", file);
         fclose(file); // fecha arquivo
     }
-
-    printf("count: %i\n", count);
 }
 
 // Deleta uma dada linha do arquivo
@@ -383,8 +383,6 @@ void handleOptions(int new_fd) {
 
         // Indica o fim da string
         buf[numbytes] = '\0';
-
-        printf("Servidor recebeu: %s\n", buf);
 
         // Pega o primeiro item na mensagem que é a função desejada
         char * item = strtok(buf, "|");
