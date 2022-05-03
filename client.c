@@ -19,10 +19,16 @@
 #include <arpa/inet.h>
 
 #define PORT "4000"     // A porta a ser conectada
-#define MAXDATASIZE 120 // Número máximo de bytes transferidos na mensagem
+#define MAXDATASIZE 150 // Número máximo de bytes transferidos na mensagem
+#define MAXTITLE 40     // Número máximo de bytes em um título
+#define MAXDIRECTOR 40  // Número máximo de bytes para um diretor
+#define MAXGENDER 20    // Número máximo de bytes em um genero
+#define MAXYEAR 5       // Número máximo de bytes de um ano
+#define MAXID 5         // Número máximo de bytes de um id
+#define MAXNGENDER 3    // Número máximo de generos por filme
 
-char buf[MAXDATASIZE]; // buffer auxiliar no envio/recebimento de mensagens
-int numbytes; // Número de bytes lidos
+char buf[MAXDATASIZE];  // buffer auxiliar no envio/recebimento de mensagens
+int numbytes;           // Número de bytes lidos
 
 // Pega o endereço do socket (IPv4 ou IPv6)
 void *get_in_addr(struct sockaddr *sa) {
@@ -33,32 +39,32 @@ void *get_in_addr(struct sockaddr *sa) {
 
 // Opção 1: Solicita a adição de um filme
 int newMovie(int sockfd) {
-    char title[30];
-    char gender[50];
-    char director[30];
-    char year[5];
+    char title[MAXTITLE];
+    char gender[MAXGENDER*MAXNGENDER];
+    char director[MAXDIRECTOR];
+    char year[MAXYEAR];
     char c;
 
     // Adiciona a função desejada à mensagem
-    char msg[116] = "1|";
+    char msg[MAXDATASIZE] = "1|";
     // Adiciona o título à mensagem, lendo-o
     printf("Escreva um título: ");
     fflush (stdin);
-    fgets(title, 30, stdin);
+    fgets(title, MAXTITLE, stdin);
     title[strcspn(title, "\n")] = 0;
     strcat(msg, title);
     strcat(msg,"|");
     // Adiciona o diretor à mensagem, lendo-o
     printf("Escreva o nome do diretor: ");
     fflush (stdin);
-    fgets(director, 30, stdin);
+    fgets(director, MAXDIRECTOR, stdin);
     director[strcspn(director, "\n")] = 0;
     strcat(msg, director);
     strcat(msg,"|");
     // Adiciona o ano à mensagem, lendo-o
     printf("Escreva um ano: ");
     fflush (stdin);
-    fgets(year, 5, stdin);
+    fgets(year, MAXYEAR, stdin);
     year[strcspn(year, "\n")] = 0;
     strcat(msg, year);
     strcat(msg,"|");
@@ -66,7 +72,7 @@ int newMovie(int sockfd) {
     do {c = getchar();} while (c != EOF && c != '\n');
     printf("Escreva os generos: ");
     fflush (stdin);
-    fgets(gender, 50, stdin);
+    fgets(gender, MAXGENDER*MAXNGENDER, stdin);
     gender[strcspn(gender, "\n")] = 0;
     for (int i = 0; i < strlen(gender); i++) {
         gender[i] = tolower((unsigned char) gender[i]);
@@ -74,7 +80,7 @@ int newMovie(int sockfd) {
     strcat(msg, gender);
 
     // Envia a mensagem requisitada
-    if (send(sockfd, msg, 115, 0) == -1)
+    if (send(sockfd, msg, MAXDATASIZE-1, 0) == -1)
         perror("send");
 
     // Espera a resposta do servidor
@@ -98,28 +104,31 @@ int newMovie(int sockfd) {
 
 // Opção 2: Solicita a adição de um novo genero a um filme dado
 int newGenderInMovie(int sockfd) {
-    char gender[20];
-    char id[5];
+    char gender[MAXGENDER];
+    char id[MAXID];
     char c;
 
     // Adiciona a função desejada à mensagem
-    char msg[30] = "2|";
+    char msg[MAXDATASIZE] = "2|";
     // Adiciona o id à mensagem, lendo-o
     printf("Escreva o id do filme: ");
     fflush (stdin);
-    fgets(id, 5, stdin);
+    fgets(id, MAXID, stdin);
     id[strcspn(id, "\n")] = 0;
     strcat(msg, id);
     strcat(msg,"|");
     // Adiciona o genero à mensagem, lendo-o
     printf("Escreva o genero desejado: ");
     fflush (stdin);
-    fgets(gender, 20, stdin);
+    fgets(gender, MAXGENDER, stdin);
     gender[strcspn(gender, "\n")] = 0;
+    for (int i = 0; i < strlen(gender); i++) {
+        gender[i] = tolower((unsigned char) gender[i]);
+    }
     strcat(msg, gender);
 
     // Envia a mensagem requisitada
-    if (send(sockfd, msg, 29, 0) == -1)
+    if (send(sockfd, msg, MAXDATASIZE-1, 0) == -1)
         perror("send");
 
     // Espera a resposta do servidor
@@ -197,19 +206,19 @@ int getMoviesTitleId(int sockfd) {
 
 // Opção 4: Solicita dados (título, diretor e ano) de filmes de um dado genero
 int getMoviesFromGender(int sockfd) {
-    char gender[20];
+    char gender[MAXGENDER];
 
     // Adiciona a função desejada à mensagem
-    char msg[30] = "4|";
+    char msg[MAXDATASIZE] = "4|";
     // Adiciona o genero à mensagem, lendo-o
     printf("Escreva o genero desejado: ");
     fflush (stdin);
-    fgets(gender, 20, stdin);
+    fgets(gender, MAXGENDER, stdin);
     gender[strcspn(gender, "\n")] = 0;
     strcat(msg, gender);
 
     // Envia a mensagem requisitada
-    if (send(sockfd, msg, 29, 0) == -1) {
+    if (send(sockfd, msg, MAXDATASIZE-1, 0) == -1) {
         perror("send");
         return 1;
     }
@@ -321,19 +330,19 @@ int getAllMovies(int sockfd) {
 
 // Opção 6: Solicita as informações de um filme
 int getMovie(int sockfd) {
-    char id[5];
+    char id[MAXID];
 
     // Adiciona a função desejada à mensagem
-    char msg[10] = "6|";
+    char msg[MAXDATASIZE] = "6|";
     // Adiciona o id à mensagem, lendo-o
     printf("Escreva o id do filme: ");
     fflush (stdin);
-    fgets(id, 5, stdin);
+    fgets(id, MAXID, stdin);
     id[strcspn(id, "\n")] = 0;
     strcat(msg, id);
 
     // Envia a mensagem requisitada
-    if (send(sockfd, msg, 9, 0) == -1)
+    if (send(sockfd, msg, MAXDATASIZE-1, 0) == -1)
         perror("send");
 
     // Espera a resposta do servidor
@@ -371,19 +380,19 @@ int getMovie(int sockfd) {
 
 // Opção 7: Solicita a remoção de um filme a partir de um identificador
 int removeMovie(int sockfd) {
-    char id[5];
+    char id[MAXID];
 
     // Adiciona a função desejada à mensagem
-    char msg[10] = "7|";
+    char msg[MAXDATASIZE] = "7|";
     // Adiciona o id à mensagem, lendo-o
     printf("Escreva o id do filme: ");
     fflush (stdin);
-    fgets(id, 5, stdin);
+    fgets(id, MAXID, stdin);
     id[strcspn(id, "\n")] = 0;
     strcat(msg, id);
 
     // Envia a mensagem requisitada
-    if (send(sockfd, msg, 9, 0) == -1) {
+    if (send(sockfd, msg, MAXDATASIZE-1, 0) == -1) {
         perror("send");
         return 1;
     }

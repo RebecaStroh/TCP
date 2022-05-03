@@ -19,7 +19,9 @@
 
 #define PORT "4000"     // A porta a ser conectada
 #define BACKLOG 10      // Quantas conexões pendentes podem existir
-#define MAXDATASIZE 120 // Número máximo de bytes transferidos na mensagem
+#define MAXDATASIZE 150 // Número máximo de bytes transferidos na mensagem
+#define FILENAME "data.txt" // Nome do arquivo que salva todos os dados
+#define TEMPFILENAME "delete.tmp" // Nome do arquivo que salva todos os dados
 
 FILE* file; // O Arquivo que usaremos para salvar os dados
 int numbytes, result;
@@ -38,6 +40,27 @@ void *get_in_addr(struct sockaddr *sa) {
     return &(((struct sockaddr_in6*)sa)->sin6_addr); // IPv6
 }
 
+// Garante que o arquivo tem mais o primeiro item que conta a quantidade de filmes e o header
+void garanteeNumberAndHeaderLinesOnFile() {
+    char buf[MAXDATASIZE];
+    int count = 1;
+
+    file = fopen(FILENAME, "r"); // Abre o arquivo como leitura
+    while ((fgets(buf, MAXDATASIZE, file)) != NULL) { // Le cada linha do arquivo
+        count++;
+    }
+    fclose(file); // fecha arquivo
+
+    if ((count == 1) || (count == 2)) {
+        file = fopen(FILENAME, "w"); // Abre o arquivo como escrita
+        fputs("0", file);
+        fputs("\nid|title|director|year|genders", file);
+        fclose(file); // fecha arquivo
+    }
+
+    printf("count: %i\n", count);
+}
+
 // Deleta uma dada linha do arquivo
 void deleteLine(const int line) {
     char buf[MAXDATASIZE];
@@ -45,8 +68,8 @@ void deleteLine(const int line) {
     int count = 1;
     int n;
 
-    file = fopen("data.txt", "r"); // Abre o arquivo para leitura
-    FILE *temp = fopen("delete.tmp", "w"); // Cria um arquivo auxiliar e o abre como escrita
+    file = fopen(FILENAME, "r"); // Abre o arquivo para leitura
+    FILE *temp = fopen(TEMPFILENAME, "w"); // Cria um arquivo auxiliar e o abre como escrita
     while ((fgets(buf, MAXDATASIZE, file)) != NULL) { // Le cada linha do arquivo
         buf[strcspn(buf, "\n")] = 0; // Indica o fim da string
         if (count == 1) { // Incrementa quantidade de filmes no arquivo
@@ -63,8 +86,8 @@ void deleteLine(const int line) {
 
     fclose(file); // fecha arquivo
     fclose(temp); // fecha arquivo
-    remove("data.txt"); // apaga o arquivo original
-    rename("delete.tmp", "data.txt"); // renomeia o arquivo temporário pro nome original
+    remove(FILENAME); // apaga o arquivo original
+    rename(TEMPFILENAME, FILENAME); // renomeia o arquivo temporário pro nome original
 }
 
 // Opção 1: Adiciona um novo filme à lista do arquivo
@@ -73,8 +96,8 @@ int newMovie(int new_fd, char* movie) {
     int count = 1;
     int n;
 
-    file = fopen("data.txt", "r"); // Abre o arquivo como leitura
-    FILE *temp = fopen("delete.tmp", "w"); // Cria um arquivo auxiliar e o abre como escrita
+    file = fopen(FILENAME, "r"); // Abre o arquivo como leitura
+    FILE *temp = fopen(TEMPFILENAME, "w"); // Cria um arquivo auxiliar e o abre como escrita
     while ((fgets(buf, MAXDATASIZE, file)) != NULL) { // Le cada linha do arquivo
         if (count == 1) { // Aumenta a quantidade de filmes no arquivo
             n = atoi(buf) + 1;
@@ -93,8 +116,8 @@ int newMovie(int new_fd, char* movie) {
 
     fclose(file); // fecha arquivo
     fclose(temp); // fecha arquivo
-    remove("data.txt"); // apaga o arquivo original
-    rename("delete.tmp", "data.txt"); // renomeia o arquivo temporário pro nome original
+    remove(FILENAME); // apaga o arquivo original
+    rename(TEMPFILENAME, FILENAME); // renomeia o arquivo temporário pro nome original
 
     if (send(new_fd, "1", 2, 0) == -1) { // Envia que deu certo
         perror("send");
@@ -113,8 +136,8 @@ int newGenderInMovie(int new_fd, char* args) {
     int movieExists = 0;
     int genderExists = 0;
 
-    file = fopen("data.txt", "r"); // Abre o arquivo como leitura
-    FILE *temp = fopen("delete.tmp", "w"); // Cria um arquivo auxiliar e o abre como escrita
+    file = fopen(FILENAME, "r"); // Abre o arquivo como leitura
+    FILE *temp = fopen(TEMPFILENAME, "w"); // Cria um arquivo auxiliar e o abre como escrita
 
     fgets(buf, MAXDATASIZE, file); // Le quantos filmes existem no arquivo
     fputs(buf, temp); // insere a linha no arquivo temporário
@@ -144,7 +167,6 @@ int newGenderInMovie(int new_fd, char* args) {
                 movie[strcspn(movie, "\n")] = 0; // Indica o fim da string
                 strcat(movie, ",");
                 strcat(movie, gender);
-                strcat(movie, "\n");
             }
         }
         fputs(movie, temp); // insere a linha no arquivo temporário
@@ -152,8 +174,8 @@ int newGenderInMovie(int new_fd, char* args) {
 
     fclose(file); // fecha arquivo
     fclose(temp); // fecha arquivo
-    remove("data.txt"); // apaga o arquivo original
-    rename("delete.tmp", "data.txt"); // renomeia o arquivo temporário pro nome original
+    remove(FILENAME); // apaga o arquivo original
+    rename(TEMPFILENAME, FILENAME); // renomeia o arquivo temporário pro nome original
 
     if (genderExists || !movieExists) {
         if (send(new_fd, "0", 2, 0) == -1) { // Se o genero já existe ou o filme não foi encontrado, envia que houve um erro
@@ -176,7 +198,7 @@ int getMoviesTitleId(int new_fd) {
     char buf[MAXDATASIZE];
     char movie[MAXDATASIZE];
 
-    file = fopen("data.txt", "r"); // Abre o arquivo como leitura
+    file = fopen(FILENAME, "r"); // Abre o arquivo como leitura
     fgets(buf, MAXDATASIZE, file); // Le quantos filmes existem no arquivo
 
     if (send(new_fd, buf, MAXDATASIZE-1, 0) == -1) { // Envia a quantidade de filmes
@@ -210,7 +232,7 @@ int getMoviesFromGender(int new_fd, char* gender) {
     char buf[MAXDATASIZE];
     char movie[MAXDATASIZE];
 
-    file = fopen("data.txt", "r"); // Abre o arquivo como leitura
+    file = fopen(FILENAME, "r"); // Abre o arquivo como leitura
     fgets(buf, MAXDATASIZE, file); // Le quantos filmes existem no arquivo
     fgets(buf, MAXDATASIZE, file); // Le o header do arquivo
 
@@ -253,7 +275,7 @@ int getMoviesFromGender(int new_fd, char* gender) {
 // Opção 5: Retorna todos os filmes
 int getAllMovies(int new_fd) {   
     char buf[MAXDATASIZE];
-    file = fopen("data.txt", "r"); // Abre o arquivo como leitura
+    file = fopen(FILENAME, "r"); // Abre o arquivo como leitura
     fgets(buf, MAXDATASIZE, file); // Le quantos filmes existem no arquivo
 
     if (send(new_fd, buf, MAXDATASIZE-1, 0) == -1) { // Envia a quantidade de filmes
@@ -281,7 +303,7 @@ int getMovie(int new_fd, char* id) {
     char buf[MAXDATASIZE];
     char movie[MAXDATASIZE];
 
-    file = fopen("data.txt", "r"); // Abre o arquivo como leitura
+    file = fopen(FILENAME, "r"); // Abre o arquivo como leitura
     fgets(buf, MAXDATASIZE, file); // Le quantos filmes existem no arquivo
     fgets(buf, MAXDATASIZE, file); // Le o header do arquivo
 
@@ -313,7 +335,7 @@ int removeMovie(int new_fd, char* id) {
     char buf[MAXDATASIZE];
     int line = 3;
 
-    file = fopen("data.txt", "r"); // Abre o arquivo como leitura
+    file = fopen(FILENAME, "r"); // Abre o arquivo como leitura
     fgets(buf, MAXDATASIZE, file); // Le quantos filmes existem no arquivo
     fgets(buf, MAXDATASIZE, file); // Le o header do arquivo
 
@@ -469,6 +491,8 @@ int main(void)
     }
 
     printf("Esperando conexões...\n");
+
+    garanteeNumberAndHeaderLinesOnFile();
 
     // Fica a espera de novas conexões por conta do accept()
     while(1) {
