@@ -24,7 +24,7 @@
 #define TEMPFILENAME "delete.tmp" // Nome do arquivo que salva todos os dados
 
 FILE* file; // O Arquivo que usaremos para salvar os dados
-int numbytes, result;
+int numbytes;
 
 // Recolhe todos os processos "mortos"
 void sigchld_handler(int s) {

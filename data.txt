@@ -1,4 +1,4 @@
 2
 id|title|director|year|genders
-0|O Resgate do Soldado Brian|Steven Spielburg|1999|drama,guerra
-1|Djanko Livre|Quentin Tarantoni|2013|ação,faroeste
+1|O Resgate do Soldado Brian|Steven Spielburg|1999|drama,guerra
+2|Djanko Livre|Quentin Tarantoni|2013|ação,faroeste
