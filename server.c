@@ -348,7 +348,7 @@ int removeMovie(int new_fd, char* id) {
                 fclose(file); // fecha o arquivo
                 return 1;
             }
-            fclose(file); // fecha o arquivo
+            // fclose(file); // fecha o arquivo
             return 0;
         }
         line++;
